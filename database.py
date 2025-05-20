@@ -13,10 +13,11 @@ from models.knowledgeBases import Base
 from models.phone_numbers import Base
 from models.phone_provider import Base
 from sqlalchemy.orm import sessionmaker, Session
-
+from dotenv import load_dotenv
+load_dotenv()
 # Configure your database connection string
 # It's recommended to use environment variables for sensitive information
-DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://postgres:admin@localhost:5432/json_to_pgsql")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 # Replace with your actual database connection string if not using environment variable
 # Example: DATABASE_URL = "postgresql://postgres:mysecretpassword@localhost:5432/rtcl_db"

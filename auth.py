@@ -7,12 +7,15 @@ from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 from database import get_db
 import models.users
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
 # to get a string like this run:
 # openssl rand -hex 32
-SECRET_KEY = "123!Umer#Shah*Farooqi!!!??1234567890"  # Change this to a secure secret key
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 720
+SECRET_KEY = os.getenv("SECRET_KEY")  # Change this to a secure secret key
+ALGORITHM = os.getenv("ALGORITHM")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer(auto_error=False)

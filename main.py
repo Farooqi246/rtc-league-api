@@ -1,6 +1,9 @@
 from fastapi import FastAPI, Depends, HTTPException, status, Body
+from fastapi.middleware.cors import CORSMiddleware
 from datetime import timedelta
 from pydantic import BaseModel, EmailStr
+import os
+from dotenv import load_dotenv
 # Assuming you have routers for all entities created in the 'routers' directory
 from database import create_db_tables, get_db
 # Import the users router
@@ -13,23 +16,42 @@ from auth import (
 )
 from sqlalchemy.orm import Session
 
+# Load environment variables
+load_dotenv()
+
 class TokenRequest(BaseModel):
     email: EmailStr
     password: str
+
+# Get environment variables
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
 
 app = FastAPI(
     title="RTC League API",
     description="API for managing RTC League data entities",
     version="0.1.0",
+    docs_url="/docs",  # Always enable Swagger
+    redoc_url="/redoc",  # Always enable ReDoc
 )
 
-# create_db_tables()
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
+# Create database tables on startup
+# @app.on_event("startup")
+# async def startup_event():
+#     create_db_tables()
 
 @app.get("/")
 async def read_root():
     return {"message": "Welcome to the RTC League API"}
-
 
 @app.post("/token")
 async def login_for_access_token(
@@ -49,7 +71,6 @@ async def login_for_access_token(
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
-
 # Include users router without authentication for user creation
 app.include_router(users.router)
 
@@ -65,3 +86,7 @@ app.include_router(custom_tools.router, dependencies=[Depends(get_current_active
 app.include_router(knowledgeBase.router, dependencies=[Depends(get_current_active_user)])
 app.include_router(phone_numbers.router, dependencies=[Depends(get_current_active_user)])
 app.include_router(phone_provider.router, dependencies=[Depends(get_current_active_user)])
+
+# WSGI entrypoint for PythonAnywhere
+from uvicorn.middleware.wsgi import WSGIMiddleware
+application = WSGIMiddleware(app)
